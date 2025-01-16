@@ -1,0 +1,19 @@
+services:
+  app:
+    environment:
+      DATABASE_URL: postgresql://test_user:password@db:5432/test_db
+      APP_ENV: testing
+
+  db:
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: test_db
+    container_name: test_db
+    ports:
+      - "5431:5432"
+    volumes:
+      - test_db_data:/var/lib/postgresql/data
+
+volumes:
+  test_db_data:
