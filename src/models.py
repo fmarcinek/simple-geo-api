@@ -1,4 +1,13 @@
-from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, Table
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Column,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+)
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -40,9 +49,9 @@ class IpGeolocation(Base):
     __tablename__ = "ip_geolocations"
 
     id = Column(Integer, primary_key=True)
-    ip = Column(String, nullable=False)
-    type = Column(String, nullable=False)
-    url = Column(String)
+    ip = Column(String, index=True)
+    type = Column(String)
+    url = Column(String, index=True)
     continent_code = Column(String, nullable=False)
     continent_name = Column(String, nullable=False)
     country_code = Column(String, nullable=False)
@@ -61,3 +70,9 @@ class IpGeolocation(Base):
 
     location_id = Column(Integer, ForeignKey("locations.id"))
     location = relationship("Location", backref="ip_geolocations", uselist=False)
+
+    __table_args__ = (
+        CheckConstraint(
+            "(ip IS NOT NULL OR url IS NOT NULL)", name="ip_or_url_not_null"
+        ),
+    )

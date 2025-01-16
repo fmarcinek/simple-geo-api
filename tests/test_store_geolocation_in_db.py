@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy import exc
 
 from src.models import IpGeolocation, Language, Location
 
@@ -50,3 +51,38 @@ def test_create_and_store_ip_geolocation_full(session, languages):
     ip_geolocation = session.query(IpGeolocation).first()
 
     assert new_ip_geolocation == ip_geolocation
+
+
+def test_error_when_neither_ip_nor_url_field(session):
+    location = Location(
+        geoname_id=756135,
+        capital="Warsaw",
+        country_flag="https://assets.ipstack.com/flags/pl.svg",
+        country_flag_emoji="🇵🇱",
+        country_flag_emoji_unicode="U+1F1F5 U+1F1F1",
+        calling_code="48",
+        is_eu=True,
+        languages=[],
+    )
+
+    new_ip_geolocation = IpGeolocation(
+        continent_code="EU",
+        continent_name="Europe",
+        country_code="PL",
+        country_name="Poland",
+        region_code="MZ",
+        region_name="Mazovia",
+        city="Warsaw",
+        zip="00-025",
+        latitude=52.2317008972168,
+        longitude=21.0183391571045,
+        ip_routing_type="fixed",
+        connection_type="tx",
+        location=location,
+    )
+
+    session.add(new_ip_geolocation)
+
+    with pytest.raises(exc.IntegrityError) as e:
+        session.commit()
+        assert 'violates check constraint "ip_or_url_not_null"' in e.msg
