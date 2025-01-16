@@ -1,10 +1,63 @@
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, Table
+from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
-class Item(Base):
-    __tablename__ = "items"
+location_language_association = Table(
+    "location_language_association",
+    Base.metadata,
+    Column("location_id", Integer, ForeignKey("locations.id"), primary_key=True),
+    Column("language_id", Integer, ForeignKey("languages.id"), primary_key=True),
+)
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
+
+class Language(Base):
+    __tablename__ = "languages"
+
+    id = Column(Integer, primary_key=True)
+    code = Column(String, nullable=False)
+    name = Column(String, nullable=False)
+    native = Column(String, nullable=False)
+
+
+class Location(Base):
+    __tablename__ = "locations"
+
+    id = Column(Integer, primary_key=True)
+    geoname_id = Column(Integer, nullable=False)
+    capital = Column(String, nullable=False)
+    country_flag = Column(String, nullable=False)
+    country_flag_emoji = Column(String, nullable=False)
+    country_flag_emoji_unicode = Column(String, nullable=False)
+    calling_code = Column(String, nullable=False)
+    is_eu = Column(Boolean, nullable=False)
+
+    # relationship many-to-many using auxiliary 'location_language_association' table
+    languages = relationship("Language", secondary=location_language_association)
+
+
+class IpGeolocation(Base):
+    __tablename__ = "ip_geolocations"
+
+    id = Column(Integer, primary_key=True)
+    ip = Column(String, nullable=False)
+    type = Column(String, nullable=False)
+    url = Column(String)
+    continent_code = Column(String, nullable=False)
+    continent_name = Column(String, nullable=False)
+    country_code = Column(String, nullable=False)
+    country_name = Column(String, nullable=False)
+    region_code = Column(String, nullable=False)
+    region_name = Column(String, nullable=False)
+    city = Column(String, nullable=False)
+    zip = Column(String)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    msa = Column(String)
+    dma = Column(String)
+    radius = Column(String)
+    ip_routing_type = Column(String)
+    connection_type = Column(String)
+
+    location_id = Column(Integer, ForeignKey("locations.id"))
+    location = relationship("Location", backref="ip_geolocations", uselist=False)
