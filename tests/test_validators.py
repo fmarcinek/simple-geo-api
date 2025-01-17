@@ -1,7 +1,29 @@
 import pytest
 from pydantic import ValidationError
 
-from src.validators import IpGeolocationModel, LanguageModel, LocationModel
+from src.validators import (
+    IpGeolocationModel,
+    LanguageModel,
+    LocationModel,
+    normalize_url,
+)
+
+
+@pytest.mark.parametrize(
+    "url,expected_output",
+    [
+        ("https://example.com/path?query=123", "example.com"),
+        ("http://subdomain.example.com", "subdomain.example.com"),
+        ("ftp://example.com", "example.com"),
+        ("https://example.com/", "example.com"),
+        ("example.com/path?query=123", "example.com"),
+        ("subdomain.example.com", "subdomain.example.com"),
+        ("not_a_url", ""),
+        ("", ""),
+    ],
+)
+def test_normalize_url(url, expected_output):
+    assert normalize_url(url) == expected_output
 
 
 def test_valid_latitude_and_longitude():

@@ -1,7 +1,21 @@
 import ipaddress
 from typing import List, Optional
+from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+
+def normalize_url(url: str) -> str:
+    try:
+        if not urlparse(url).scheme:
+            url = f"http://{url}"
+
+        parsed_url = urlparse(url)
+        if parsed_url.netloc and "." in parsed_url.netloc:
+            return parsed_url.netloc
+        return ""
+    except ValueError:
+        return ""
 
 
 class LanguageModel(BaseModel):
@@ -93,6 +107,12 @@ class IpGeolocationModel(BaseModel):
             return str(normalized_ip_address)
         except ValueError:
             raise ValueError("'ip' field must be either ipv4 or ipv6 standard")
+
+    @field_validator("url")
+    def check_url_and_normalize(cls, url):
+        if url and not normalize_url(url):
+            raise ValueError("'url' field must be a correct url address")
+        return normalize_url(url)
 
     @field_validator("latitude")
     def validate_latitude(cls, v):
