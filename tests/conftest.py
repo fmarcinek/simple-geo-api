@@ -1,9 +1,12 @@
 import os
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from src.api.v1.endpoints.geolocations import get_db
+from src.main import app
 from src.models import Base
 
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -25,3 +28,12 @@ def session(engine):
     yield session
     session.close()
     Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture(scope="function")
+def client(session):
+    def override_get_db():
+        yield session
+
+    app.dependency_overrides[get_db] = override_get_db
+    return TestClient(app)
