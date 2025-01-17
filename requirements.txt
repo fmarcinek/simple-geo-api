@@ -6,3 +6,5 @@ psycopg2
 pytest
 httpx
 pydantic
+requests
+responses
