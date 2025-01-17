@@ -30,7 +30,9 @@ class Language(Base):
 
     def as_dict(self):
         return {
-            column.name: getattr(self, column.name) for column in self.__table__.columns
+            column.name: getattr(self, column.name)
+            for column in self.__table__.columns
+            if column.name != "id"
         }
 
 
@@ -52,6 +54,7 @@ class Location(Base):
     def as_dict(self):
         columns = self.__table__.columns
         result = {column.name: getattr(self, column.name) for column in columns}
+        del result["id"]
 
         if self.languages:
             result["languages"] = [language.as_dict() for language in self.languages]
@@ -94,6 +97,7 @@ class IpGeolocation(Base):
     def as_dict(self):
         columns = self.__table__.columns
         result = {column.name: getattr(self, column.name) for column in columns}
+        del result["id"]
 
         if self.location:
             result["location"] = self.location.as_dict()

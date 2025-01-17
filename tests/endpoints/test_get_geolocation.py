@@ -3,6 +3,7 @@ from unittest.mock import patch
 import pytest
 
 from src.models import IpGeolocation, Language, Location
+from src.validators import IpGeolocationModel
 
 
 @pytest.fixture
@@ -116,3 +117,62 @@ def test_get_geolocation_success(session, client):
     assert response.status_code == 200
     assert response.json()["ip"] == "162.158.103.87"
     assert response.json()["country_name"] == "Poland"
+
+
+def test_get_geolocation_with_external_source(session, client):
+    session.add(
+        IpGeolocation(
+            ip="192.168.1.1",
+            type="ipv4",
+            url=None,
+            continent_code="NA",
+            continent_name="North America",
+            country_code="US",
+            country_name="United States",
+            region_code="CA",
+            region_name="California",
+            city="Los Angeles",
+            latitude=34.0522,
+            longitude=-118.2437,
+        )
+    )
+    session.commit()
+
+    mock_data = {
+        "ip": "8.8.8.8",
+        "type": "ipv4",
+        "continent_code": "NA",
+        "continent_name": "North America",
+        "country_code": "US",
+        "country_name": "United States",
+        "region_code": "CA",
+        "region_name": "California",
+        "city": "Mountain View",
+        "latitude": 37.3861,
+        "longitude": -122.0839,
+    }
+
+    with patch(
+        "src.api.v1.endpoints.geolocations.fetch_geolocation_from_external_source",
+        return_value=IpGeolocationModel(**mock_data),
+    ):
+        # geolocation data are in database
+        response = client.get("/geolocations/192.168.1.1")
+        assert response.status_code == 200
+        assert response.json()["ip"] == "192.168.1.1"
+        assert response.json()["country_name"] == "United States"
+
+        # no geolocation data in database, but it is in external source
+        response = client.get("/geolocations/8.8.8.8")
+        assert response.status_code == 200
+        assert response.json()["ip"] == "8.8.8.8"
+        assert response.json()["city"] == "Mountain View"
+
+    # no geolocation data neither in database nor in external source
+    with patch(
+        "src.api.v1.endpoints.geolocations.fetch_geolocation_from_external_source",
+        return_value=None,
+    ):
+        response = client.get("/geolocations/10.0.0.1")
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Geolocation not found"

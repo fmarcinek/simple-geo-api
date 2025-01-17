@@ -3,7 +3,6 @@ from typing import Optional
 
 import requests
 
-from src.models import IpGeolocation
 from src.validators import IpGeolocationModel
 
 
@@ -16,7 +15,7 @@ IP_STACK_API_URL = "http://api.ipstack.com/{search_value}"
 
 def fetch_geolocation_from_external_source(
     normalized_value: str,
-) -> Optional[IpGeolocation]:
+) -> Optional[IpGeolocationModel]:
     """
     Fetches geolocation data from an external API (ipstack.com)
     and converts it into IpGeolocation.
@@ -25,7 +24,9 @@ def fetch_geolocation_from_external_source(
 
     try:
         if not ip_stack_access_key:
-            raise NoIpStackAccessKeyException()
+            raise NoIpStackAccessKeyException(
+                "No env variable IP_STACK_API_ACCESS_KEY to connect with ipstack API"
+            )
         response = requests.get(
             IP_STACK_API_URL.format(search_value=normalized_value),
             timeout=5,
@@ -35,8 +36,8 @@ def fetch_geolocation_from_external_source(
 
         data = response.json()
         geolocation = IpGeolocationModel(**data)
-
         return geolocation
+
     except Exception as e:
         print(f"Error fetching geolocation data from ip stack: {e}")
         return None
