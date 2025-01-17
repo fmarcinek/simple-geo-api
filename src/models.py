@@ -28,6 +28,11 @@ class Language(Base):
     name = Column(String, nullable=False)
     native = Column(String, nullable=False)
 
+    def as_dict(self):
+        return {
+            column.name: getattr(self, column.name) for column in self.__table__.columns
+        }
+
 
 class Location(Base):
     __tablename__ = "locations"
@@ -43,6 +48,15 @@ class Location(Base):
 
     # relationship many-to-many using auxiliary 'location_language_association' table
     languages = relationship("Language", secondary=location_language_association)
+
+    def as_dict(self):
+        columns = self.__table__.columns
+        result = {column.name: getattr(self, column.name) for column in columns}
+
+        if self.languages:
+            result["languages"] = [language.as_dict() for language in self.languages]
+
+        return result
 
 
 class IpGeolocation(Base):
@@ -76,3 +90,12 @@ class IpGeolocation(Base):
             "(ip IS NOT NULL OR url IS NOT NULL)", name="ip_or_url_not_null"
         ),
     )
+
+    def as_dict(self):
+        columns = self.__table__.columns
+        result = {column.name: getattr(self, column.name) for column in columns}
+
+        if self.location:
+            result["location"] = self.location.as_dict()
+
+        return result
