@@ -102,6 +102,8 @@ class IpGeolocationModel(BaseModel):
 
     @field_validator("ip")
     def check_ip_address_and_normalize(cls, ip_address):
+        if ip_address is None:
+            return None
         try:
             normalized_ip_address = ipaddress.ip_address(ip_address)
             return str(normalized_ip_address)
