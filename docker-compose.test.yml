@@ -2,6 +2,7 @@ services:
   app:
     environment:
       DATABASE_URL: postgresql://test_user:password@db:5432/test_db
+      IP_STACK_API_ACCESS_KEY: ${IP_STACK_API_ACCESS_KEY_TEST}
       APP_ENV: testing
 
   db:
