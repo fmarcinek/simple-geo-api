@@ -1,5 +1,9 @@
-from src.api.v1.endpoints.services import get_geolocation_from_db
+from src.api.v1.endpoints.services import (
+    check_geolocation_exists_in_db,
+    get_geolocation_from_db,
+)
 from src.models import IpGeolocation
+from src.validators import IpGeolocationModel
 
 
 def test_get_geolocation_from_db_ip(session):
@@ -53,3 +57,147 @@ def test_get_geolocation_from_db_url(session):
 def test_get_geolocation_from_db_not_found(session):
     result = get_geolocation_from_db("nonexistent.com", "url", session)
     assert result is None
+
+
+def test_geolocation_exists_with_matching_ip_and_url(session):
+    session.add(
+        IpGeolocation(
+            ip="192.168.1.1",
+            url="example.com",
+            continent_code="NA",
+            continent_name="North America",
+            country_code="US",
+            country_name="United States",
+            region_code="CA",
+            region_name="California",
+            city="Los Angeles",
+            latitude=34.0522,
+            longitude=-118.2437,
+        )
+    )
+    session.commit()
+
+    geolocation = IpGeolocationModel(
+        ip="192.168.1.1",
+        url="example.com",
+        continent_code="NA",
+        continent_name="North America",
+        country_code="US",
+        country_name="United States",
+        region_code="CA",
+        region_name="California",
+        city="Los Angeles",
+        latitude=34.0522,
+        longitude=-118.2437,
+    )
+
+    result = check_geolocation_exists_in_db(geolocation, session)
+    assert result is True
+
+
+def test_geolocation_not_exists_with_different_ip_and_url(session):
+    session.add(
+        IpGeolocation(
+            ip="192.168.1.2",
+            url="other.com",
+            continent_code="NA",
+            continent_name="North America",
+            country_code="US",
+            country_name="United States",
+            region_code="CA",
+            region_name="California",
+            city="Los Angeles",
+            latitude=34.0522,
+            longitude=-118.2437,
+        )
+    )
+    session.commit()
+
+    geolocation = IpGeolocationModel(
+        ip="192.168.1.1",
+        url="example.com",
+        continent_code="NA",
+        continent_name="North America",
+        country_code="US",
+        country_name="United States",
+        region_code="CA",
+        region_name="California",
+        city="Los Angeles",
+        latitude=34.0522,
+        longitude=-118.2437,
+    )
+
+    result = check_geolocation_exists_in_db(geolocation, session)
+    assert result is False
+
+
+def test_geolocation_exists_with_null_ip_or_url(session):
+    session.add(
+        IpGeolocation(
+            ip=None,
+            url="example.com",
+            continent_code="NA",
+            continent_name="North America",
+            country_code="US",
+            country_name="United States",
+            region_code="CA",
+            region_name="California",
+            city="Los Angeles",
+            latitude=34.0522,
+            longitude=-118.2437,
+        )
+    )
+    session.commit()
+
+    geolocation = IpGeolocationModel(
+        ip=None,
+        url="example.com",
+        continent_code="NA",
+        continent_name="North America",
+        country_code="US",
+        country_name="United States",
+        region_code="CA",
+        region_name="California",
+        city="Los Angeles",
+        latitude=34.0522,
+        longitude=-118.2437,
+    )
+
+    result = check_geolocation_exists_in_db(geolocation, session)
+    assert result is True
+
+
+def test_geolocation_not_exists_with_null_ip_or_url(session):
+    session.add(
+        IpGeolocation(
+            ip=None,
+            url="example.com",
+            continent_code="NA",
+            continent_name="North America",
+            country_code="US",
+            country_name="United States",
+            region_code="CA",
+            region_name="California",
+            city="Los Angeles",
+            latitude=34.0522,
+            longitude=-118.2437,
+        )
+    )
+    session.commit()
+
+    geolocation = IpGeolocationModel(
+        ip=None,
+        url="notfound.com",
+        continent_code="NA",
+        continent_name="North America",
+        country_code="US",
+        country_name="United States",
+        region_code="CA",
+        region_name="California",
+        city="Los Angeles",
+        latitude=34.0522,
+        longitude=-118.2437,
+    )
+
+    result = check_geolocation_exists_in_db(geolocation, session)
+    assert result is False
