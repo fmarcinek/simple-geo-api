@@ -52,4 +52,7 @@ def get_geolocation(ip_or_url_value: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Geolocation not found")
 
     except RuntimeError:
+        geolocation_model = fetch_geolocation_from_external_source(normalized_value)
+        if geolocation_model:
+            return geolocation_model
         raise HTTPException(status_code=500, detail="Database connection error")

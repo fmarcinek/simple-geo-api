@@ -21,4 +21,5 @@ def get_geolocation_from_db(
                 .first()
             )
     except (SQLAlchemyError, DBAPIError) as e:
+        print(f"Database query failed: {e}")
         raise RuntimeError("Database query failed") from e

@@ -162,17 +162,55 @@ def test_get_geolocation_with_external_source(session, client):
         assert response.json()["ip"] == "192.168.1.1"
         assert response.json()["country_name"] == "United States"
 
-        # no geolocation data in database, but it is in external source
+        # no geolocation data in database, but data is in external source
         response = client.get("/geolocations/8.8.8.8")
         assert response.status_code == 200
         assert response.json()["ip"] == "8.8.8.8"
         assert response.json()["city"] == "Mountain View"
 
-    # no geolocation data neither in database nor in external source
     with patch(
         "src.api.v1.endpoints.geolocations.fetch_geolocation_from_external_source",
         return_value=None,
     ):
+        # no geolocation data neither in database nor in external source
         response = client.get("/geolocations/10.0.0.1")
         assert response.status_code == 404
         assert response.json()["detail"] == "Geolocation not found"
+
+
+def test_get_geolocation_with_external_source_database_connection_error(
+    mock_db_session, client
+):
+    mock_data = {
+        "ip": "8.8.8.8",
+        "type": "ipv4",
+        "continent_code": "NA",
+        "continent_name": "North America",
+        "country_code": "US",
+        "country_name": "United States",
+        "region_code": "CA",
+        "region_name": "California",
+        "city": "Mountain View",
+        "latitude": 37.3861,
+        "longitude": -122.0839,
+    }
+    mock_db_session.side_effect = RuntimeError("Database connection error")
+
+    with patch(
+        "src.api.v1.endpoints.geolocations.fetch_geolocation_from_external_source",
+        return_value=IpGeolocationModel(**mock_data),
+    ):
+        # database connection error, but data is in external source
+        response = client.get("/geolocations/8.8.8.8")
+        assert response.status_code == 200
+        assert response.json()["ip"] == "8.8.8.8"
+        assert response.json()["country_name"] == "United States"
+
+    with patch(
+        "src.api.v1.endpoints.geolocations.fetch_geolocation_from_external_source",
+        return_value=None,
+    ):
+        # database connection error and no data in external source
+        response = client.get("/geolocations/8.8.8.8")
+        assert response.status_code == 500
+        assert response.json()["detail"] == "Database connection error"
