@@ -127,3 +127,43 @@ class IpGeolocationModel(BaseModel):
         if not (-180 <= v <= 180):
             raise ValueError("Longitude must be between -180 and 180")
         return v
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "example": {
+                        "ip": "94.23.242.48",
+                        "type": "ipv4",
+                        "continent_code": "EU",
+                        "continent_name": "Europe",
+                        "country_code": "FR",
+                        "country_name": "France",
+                        "region_code": "HDF",
+                        "region_name": "Hauts-de-France",
+                        "city": "Roubaix",
+                        "zip": "59100",
+                        "latitude": 50.6912689208984,
+                        "longitude": 3.17320990562439,
+                        "msa": None,
+                        "dma": None,
+                        "radius": None,
+                        "ip_routing_type": "fixed",
+                        "connection_type": "tx",
+                        "location": {
+                            "geoname_id": 2982681,
+                            "capital": "Paris",
+                            "languages": [
+                                {"code": "fr", "name": "French", "native": "Français"}
+                            ],
+                            "country_flag": "https://assets.ipstack.com/flags/fr.svg",
+                            "country_flag_emoji": "🇫🇷",
+                            "country_flag_emoji_unicode": "U+1F1EB U+1F1F7",
+                            "calling_code": "33",
+                            "is_eu": True,
+                        },
+                    }
+                }
+            ]
+        }
+    }
