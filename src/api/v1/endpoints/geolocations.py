@@ -30,7 +30,7 @@ def validate_and_normalize_ip_or_url(ip_or_url_value: str) -> Tuple[str, str]:
         normalized_value = normalize_url(ip_or_url_value)
         if not normalized_value:
             raise HTTPException(
-                status_code=400, detail="GET parameter must be Ipv4, Ipv6 or URL value"
+                status_code=400, detail="Parameter must be Ipv4, Ipv6 or URL value"
             )
         return normalized_value, "url"
 
@@ -117,3 +117,22 @@ def create_geolocation(geolocation: IpGeolocationModel, db: Session = Depends(ge
         print(f"Error creating geolocation: {e}")
         db.rollback()
         raise HTTPException(status_code=500, detail="Error creating geolocation")
+
+
+@router.delete("/{ip_or_url_value}", status_code=204)
+def delete_geolocation(ip_or_url_value: str, db: Session = Depends(get_db)):
+    normalized_value, value_type = validate_and_normalize_ip_or_url(ip_or_url_value)
+
+    try:
+        geolocation = get_geolocation_from_db(
+            ip_or_url_value=normalized_value, value_type=value_type, db=db
+        )
+        if not geolocation:
+            raise HTTPException(status_code=404, detail="Geolocation not found")
+    except RuntimeError:
+        raise HTTPException(status_code=500, detail="Database connection error")
+
+    db.delete(geolocation)
+    db.commit()
+
+    return {"detail": "Geolocation deleted successfully"}

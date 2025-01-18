@@ -1,4 +1,5 @@
 import os
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -37,3 +38,9 @@ def client(session):
 
     app.dependency_overrides[get_db] = override_get_db
     return TestClient(app)
+
+
+@pytest.fixture
+def mock_db_session():
+    with patch("src.api.v1.endpoints.geolocations.get_geolocation_from_db") as mock_db:
+        yield mock_db

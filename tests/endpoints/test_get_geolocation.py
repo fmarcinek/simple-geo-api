@@ -1,15 +1,7 @@
 from unittest.mock import patch
 
-import pytest
-
 from src.models import IpGeolocation, Language, Location
 from src.validators import IpGeolocationModel
-
-
-@pytest.fixture
-def mock_db_session():
-    with patch("src.api.v1.endpoints.geolocations.get_geolocation_from_db") as mock_db:
-        yield mock_db
 
 
 def test_valid_ipv4(mock_db_session, client):
@@ -62,7 +54,7 @@ def test_valid_url(mock_db_session, client):
 def test_invalid_ip_or_url(client):
     response = client.get("/geolocations/invalid_input")
     assert response.status_code == 400
-    assert response.json()["detail"] == "GET parameter must be Ipv4, Ipv6 or URL value"
+    assert response.json()["detail"] == "Parameter must be Ipv4, Ipv6 or URL value"
 
 
 def test_geolocation_not_found(mock_db_session, client):
